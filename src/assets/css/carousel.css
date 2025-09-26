@@ -1,0 +1,18 @@
+.carousel-img-active {
+  transform: translateX(0);
+  opacity: 1;
+}
+.carousel-img-slide-right {
+  animation: slideRight 0.4s;
+}
+.carousel-img-slide-left {
+  animation: slideLeft 0.4s;
+}
+@keyframes slideRight {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideLeft {
+  0% { transform: translateX(-100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}

@@ -1,0 +1,21 @@
+<svg width="200" height="200" viewBox="0 0 200 200"
+     xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wallpeek icon optimized">
+  <style>
+    :root { --fg: #000; --bg: #fff; }
+  </style>
+
+  <!-- 外框：縮小邊距，減少頂部留白 -->
+  <rect x="16" y="16" width="168" height="168" rx="28"
+        fill="var(--bg)" stroke="var(--fg)" stroke-width="8"/>
+
+  <!-- 疊加小方塊：往下移一點，避免貼頂 -->
+  <rect x="128" y="28" width="40" height="40" rx="8"
+        stroke="var(--fg)" stroke-width="6" fill="none"/>
+  <rect x="116" y="16" width="40" height="40" rx="8"
+        fill="var(--fg)" opacity="0.12"/>
+
+  <!-- 中心光圈：上移，使整體視覺居中 -->
+  <circle cx="100" cy="104" r="38"
+          stroke="var(--fg)" stroke-width="8" fill="none"/>
+  <circle cx="100" cy="104" r="14" fill="var(--fg)"/>
+</svg>

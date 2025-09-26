@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+/* 始终显示滚动条，防止页面抖动 */
+html {
+  overflow-y: scroll;
+  scrollbar-width: thin;
+}
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
