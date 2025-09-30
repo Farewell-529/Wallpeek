@@ -25,7 +25,7 @@ function Home() {
     const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
     return `${baseURL}/image?url=${encodeURIComponent(originalUrl)}`;
   }, []);
-  
+
   const handleImageClick = (id: string, source: string) => {
     navigate(`/${source}/${id}`);
   };
@@ -100,7 +100,7 @@ function Home() {
     setCarouselSet(false);
     hasInitialized.current = false; // 重置初始化标记
   }, [searchParams, setCurrentSource])
-  
+
   // 加载图片数据
   useEffect(() => {
     // 防止重复调用：只在初始化完成且未加载时执行
@@ -109,7 +109,7 @@ function Home() {
       getLatesImage();
     }
   }, [getLatesImage])
-  
+
   // 监听页码变化加载更多数据
   useEffect(() => {
     // 跳过初始的 page=1，因为上面已经处理了
