@@ -9,3 +9,34 @@ html {
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
+
+/* 3D卡片性能优化 */
+.transform-gpu {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 更流畅的3D变换 */
+.card-3d {
+  transform-origin: center center;
+  perspective-origin: center center;
+}
+
+/* 减少重绘，启用硬件加速 */
+.gpu-accelerated {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* CSS Containment - Tailwind无法实现 */
+.contain-layout-paint {
+  contain: layout style paint;
+}
+
+/* 图片渲染优化 - Tailwind无法实现 */
+.image-crisp {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: optimize-contrast;
+  image-rendering: crisp-edges;
+}

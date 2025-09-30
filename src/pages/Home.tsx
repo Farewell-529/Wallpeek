@@ -127,7 +127,7 @@ function Home() {
     <div className="w-[80rem]  mx-auto">
       <Carousel images={carouselImages} />
       <SwitchSource switchSource={getSource} />
-      <div className="mt-5 grid grid-cols-4 gap-5 ">
+      <div className="mt-5 grid grid-cols-4 gap-8 ">
         {images.map((img) => (
           <div
             key={img.id}
