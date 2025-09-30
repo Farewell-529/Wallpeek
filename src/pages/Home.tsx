@@ -7,6 +7,7 @@ import LazyImage from "../components/LazyImage";
 import SwitchSource from "../components/SwitchSource";
 import { getLatestKonachanApi } from "../api/konachan/latest";
 import { useSource } from "../context/SourceContext";
+
 function Home() {
   const navigate = useNavigate();
   const [images, setImages] = useState<Image[]>([]);
@@ -15,16 +16,16 @@ function Home() {
   const [carouselImages, setCarouselImages] = useState<Image[]>([]);
   const { currentSource, setCurrentSource } = useSource();
   const [searchParams] = useSearchParams();
-  const [carouselSet, setCarouselSet] = useState(false); // 新增
+  const [carouselSet, setCarouselSet] = useState(false);
+  const hasInitialized = useRef(false); // 添加初始化标记
 
   // 控制首次加载
-  const [ready, setReady] = useState(false);
-
   // 获取代理URL的辅助函数
   const getProxyUrl = useCallback((originalUrl: string) => {
     const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
     return `${baseURL}/image?url=${encodeURIComponent(originalUrl)}`;
   }, []);
+  
   const handleImageClick = (id: string, source: string) => {
     navigate(`/${source}/${id}`);
   };
@@ -44,6 +45,9 @@ function Home() {
   }
 
   const getLatesImage = useCallback(async () => {
+    if (loadingRef.current) {
+      return; // 防止重复调用
+    }
     loadingRef.current = true;
     let res: Image[] = [];
     switch (currentSource) {
@@ -87,20 +91,38 @@ function Home() {
     setPage(1);        // 重置页码
     setImages([]);     // 清空图片列表
   }
+  // 初始化数据
   useEffect(() => {
     const source = searchParams.get('source') || 'wallhaven';
     setCurrentSource(source);
     setPage(1);
     setImages([]);
-    setReady(true)
+    setCarouselSet(false);
+    hasInitialized.current = false; // 重置初始化标记
   }, [searchParams, setCurrentSource])
+  
+  // 加载图片数据
   useEffect(() => {
-    if (!ready) return;
-    getLatesImage();
+    // 防止重复调用：只在初始化完成且未加载时执行
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      getLatesImage();
+    }
+  }, [getLatesImage])
+  
+  // 监听页码变化加载更多数据
+  useEffect(() => {
+    // 跳过初始的 page=1，因为上面已经处理了
+    if (page > 1) {
+      getLatesImage();
+    }
+  }, [page, getLatesImage])
+
+  // 滚动事件监听
+  useEffect(() => {
     window.addEventListener('scroll', handleScroll);
-    // 返回清理函数
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [getLatesImage, ready]);
+  }, []); // 只在组件挂载时添加监听器
   return (
     <div className="w-[80rem]  mx-auto">
       <Carousel images={carouselImages} />
