@@ -1,14 +1,13 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { getSearchWallhavenApi } from "../api/wallhaven/search"
 import { getSearchKonachanApi } from "../api/konachan/search"
-import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useSource } from "../context/SourceContext";
 import LazyImage from "../components/LazyImage";
 import SwitchSource from "../components/SwitchSource";
 import type { Image} from "../types/images";
 function Search() {
     const navigate = useNavigate();
-    const location = useLocation();
     const [searchParams] = useSearchParams();
     const keyword = searchParams.get("keyword");
     const [images, setImages] = useState<Image[]>([]);
@@ -16,10 +15,17 @@ function Search() {
     const loadingRef = useRef(false);
     const { currentSource } = useSource();
     const [showText, setShowText] = useState('搜索中....')
+    
+    // 获取代理URL的辅助函数
+    const getProxyUrl = useCallback((originalUrl: string) => {
+        const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
+        return `${baseURL}/image?url=${encodeURIComponent(originalUrl)}`;
+    }, []);
+    
     const handleImageClick = (id: string, source: string) => {
         navigate(`/${source}/${id}`);
     };
-    const getSearcImage = async () => {
+    const getSearcImage = useCallback(async () => {
         let res: Image[] = [];
         if (currentSource === 'wallhaven') {
             res = await getSearchWallhavenApi({ keyword: keyword || '', page });
@@ -36,7 +42,7 @@ function Search() {
         }
         setImages(prev => ([...prev, ...res]));
         loadingRef.current = false;
-    }
+    }, [currentSource, keyword, page, images]);
     const handleScroll = () => {
         // 判断是否滑到底部，并且没有在加载中
         if (
@@ -58,7 +64,7 @@ function Search() {
         setPage(1);
         setImages([]);
         getSearcImage();
-    }, [location.pathname, location.search]) 
+    }, [getSearcImage]) 
 
 
     // 处理滚动加载更多
@@ -68,7 +74,7 @@ function Search() {
         }
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [page])
+    }, [page, getSearcImage])
     return (
         <div className="w-[80rem]   mx-auto">
             <SwitchSource switchSource={getSource} />
@@ -81,7 +87,7 @@ function Search() {
                                 className="cursor-pointer"
                                 onClick={() => handleImageClick(img.id, img.source)}
                             >
-                                <LazyImage src={img.sample} alt="" />
+                                <LazyImage src={getProxyUrl(img.sample)} resolution={img.resolution} source={img.source} />
                             </div>
                         ))}
                     </div>
