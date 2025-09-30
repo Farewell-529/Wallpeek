@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { getWallhavenDetailApi } from '../api/wallhaven/detail';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getKonachanDetailApi } from "../api/konachan/detail";
 import type { ImageDetail } from "../../src/types/images";
 import mediumZoom from 'medium-zoom'
@@ -9,7 +9,56 @@ function Detail() {
   const [imageDetail, setImageDetail] = useState<ImageDetail | null>(null);
   const [progress, setProgress] = useState(0)
   const [isLoading, setLoading] = useState(false)
+  const [proxyImageUrl, setProxyImageUrl] = useState<string>('')
   const navigate = useNavigate();
+
+  // 获取代理URL的辅助函数
+  const getProxyUrl = useCallback((originalUrl: string) => {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
+    return `${baseURL}/image?url=${encodeURIComponent(originalUrl)}`;
+  }, []);
+
+  const loadImageWithProgress = useCallback((url: string) => {
+    const proxyUrl = getProxyUrl(url);
+    
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', proxyUrl, true);
+    xhr.responseType = 'blob';
+    // 重置进度和加载状态
+    setProgress(0);
+    setLoading(false);
+
+    xhr.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        setProgress(percent);
+      }
+    };
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        setProgress(100);
+        setLoading(true);
+        // 等待 DOM 更新后再初始化
+        setTimeout(() => {
+          mediumZoom('[data-zoomable]', {
+            background: '#000000d1',
+            margin: 20
+          });
+        }, 100);
+      } else {
+        console.error('Failed to load image:', xhr.status);
+        setLoading(false);
+      }
+    };
+    xhr.onerror = () => {
+      console.error('Image loading error');
+      setLoading(false);
+      setProgress(0);
+    };
+
+    xhr.send();
+  }, [getProxyUrl]);
+
   const showDetailList = [
     {
       id: 1,
@@ -27,7 +76,7 @@ function Detail() {
       text: imageDetail?.fileSize
     },]
 
-  const getImageDetail = async () => {
+  const getImageDetail = useCallback(async () => {
     let res: ImageDetail | null = null;
     if (source === 'wallhaven') {
       res = await getWallhavenDetailApi(id!);
@@ -38,17 +87,17 @@ function Detail() {
     if (res) {
       setImageDetail(res);
       if (res.url) {
+        // 设置代理图片URL
+        setProxyImageUrl(getProxyUrl(res.url));
         loadImageWithProgress(res.url);
       }
     }
-  };
+  }, [id, source, getProxyUrl, loadImageWithProgress]);
 
   const handleDownload = async () => {
     if (!imageDetail?.url) return;
     try {
-      //  根据环境自动选择代理地址
-      const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
-      const response = await fetch(`${baseURL}/image?url=${imageDetail.url}`);
+      const response = await fetch(getProxyUrl(imageDetail.url));
       const blob = await response.blob(); // 转换成二进制blob对象
       const blobUrl = window.URL.createObjectURL(blob); // 创建临时URL供下载用
       const link = document.createElement('a'); // 创建隐藏a链接
@@ -62,49 +111,6 @@ function Detail() {
       console.error('Download failed:', error); // 打印错误
     }
   };
-  const loadImageWithProgress = (url: string) => {
-    //  根据环境自动选择代理地址
-    const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
-    const proxyUrl = `${baseURL}/image?url=${url}`;
-    
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', proxyUrl, true);
-    xhr.responseType = 'blob';
-    // 重置进度和加载状态
-    setProgress(0);
-    setLoading(false);
-
-    xhr.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percent = Math.round((event.loaded / event.total) * 100);
-        setProgress(percent);
-      }
-    };
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        // const blob = xhr.response;
-        // const imgUrl = URL.createObjectURL(blob);
-        setProgress(100);
-        setLoading(true);
-        // setImageDetail(data => data ? { ...data, url: imgUrl } : null);
-        // 等待 DOM 更新后再初始化
-        setTimeout(() => {
-          mediumZoom('[data-zoomable]', {
-            background: '#000000d1',
-            margin: 20
-          });
-        }, 100);
-      } else {
-        setLoading(false);
-      }
-    };
-    xhr.onerror = () => {
-      setLoading(false);
-      setProgress(0);
-    };
-
-    xhr.send();
-  };
   const toSearchHandle = (keyword: string) => {
     navigate(`/search?keyword=${keyword}&source=${source}`);
   };
@@ -114,14 +120,23 @@ function Detail() {
       behavior: "smooth"
     });
     getImageDetail()
-  }, [])
+  }, [getImageDetail])
 
   return (
     <div className="container mx-auto p-5">
       <div className='flex justify-center items-center min-w-[90rem] min-h-[50rem]'>
         {
-          isLoading && imageDetail?.url ? (
-            <img data-zoomable className='rounded-2xl cursor-pointer' src={imageDetail.url} alt="" />
+          isLoading && proxyImageUrl ? (
+            <img 
+              data-zoomable 
+              className='rounded-2xl cursor-pointer' 
+              src={proxyImageUrl}
+              alt="" 
+              onError={() => {
+                console.error('Image failed to load:', proxyImageUrl);
+                setLoading(false);
+              }}
+            />
           ) : (
             <span className="text-xl font-semibold">🤔加载中：{progress}%</span>
           )

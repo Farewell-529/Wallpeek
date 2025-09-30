@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Image } from "../types/images";
 import { getLatestWallhavenApi } from "../api/wallhaven/latest";
@@ -19,6 +19,12 @@ function Home() {
 
   // 控制首次加载
   const [ready, setReady] = useState(false);
+
+  // 获取代理URL的辅助函数
+  const getProxyUrl = useCallback((originalUrl: string) => {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
+    return `${baseURL}/image?url=${encodeURIComponent(originalUrl)}`;
+  }, []);
   const handleImageClick = (id: string, source: string) => {
     navigate(`/${source}/${id}`);
   };
@@ -37,9 +43,9 @@ function Home() {
     return result;
   }
 
-  const getLatesImage = async () => {
+  const getLatesImage = useCallback(async () => {
     loadingRef.current = true;
-    let res: Image[];
+    let res: Image[] = [];
     switch (currentSource) {
       case 'wallhaven':
         res = await getLatestWallhavenApi({ page });
@@ -49,18 +55,24 @@ function Home() {
         break;
       default:
         console.warn('未知源', currentSource);
+        res = [];
         break;
     }
     setImages(prev => {
       const newImages = [...prev, ...res];
       if (!carouselSet) {
-        setCarouselImages(getRandomItems(newImages, 4));
+        const randomImages = getRandomItems(newImages, 4).map(img => ({
+          ...img,
+          url: getProxyUrl(img.url),
+          sample: getProxyUrl(img.sample)
+        }));
+        setCarouselImages(randomImages);
         setCarouselSet(true);
       }
       return newImages;
     });
     loadingRef.current = false;
-  }
+  }, [currentSource, page, carouselSet, getProxyUrl]);
 
   const handleScroll = () => {
     // 判断是否滑到底部，并且没有在加载中
@@ -81,14 +93,14 @@ function Home() {
     setPage(1);
     setImages([]);
     setReady(true)
-  }, [])
+  }, [searchParams, setCurrentSource])
   useEffect(() => {
     if (!ready) return;
     getLatesImage();
     window.addEventListener('scroll', handleScroll);
     // 返回清理函数
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [currentSource, page, ready]);
+  }, [getLatesImage, ready]);
   return (
     <div className="w-[80rem]  mx-auto">
       <Carousel images={carouselImages} />
@@ -100,7 +112,7 @@ function Home() {
             className="cursor-pointer"
             onClick={() => handleImageClick(img.id, img.source)}
           >
-            <LazyImage src={img.sample} resolution={img.resolution} source={img.source} alt="" />
+            <LazyImage src={getProxyUrl(img.sample)} resolution={img.resolution} source={img.source} />
 
           </div>
         ))}
