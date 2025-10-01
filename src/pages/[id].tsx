@@ -12,6 +12,9 @@ function Detail() {
   const [proxyImageUrl, setProxyImageUrl] = useState<string>('')
   const navigate = useNavigate();
 
+  
+  const isMobile = window.innerWidth < 768;
+
   // 获取代理URL的辅助函数
   const getProxyUrl = useCallback((originalUrl: string) => {
     const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
@@ -38,13 +41,15 @@ function Detail() {
       if (xhr.status === 200) {
         setProgress(100);
         setLoading(true);
-        // 等待 DOM 更新后再初始化
-        setTimeout(() => {
-          mediumZoom('[data-zoomable]', {
-            background: '#000000d1',
-            margin: 20
-          });
-        }, 100);
+        // 移动端不初始化zoom，桌面端才初始化
+        if (!isMobile) {
+          setTimeout(() => {
+            mediumZoom('[data-zoomable]', {
+              background: '#000000d1',
+              margin: 20
+            });
+          }, 100);
+        }
       } else {
         console.error('Failed to load image:', xhr.status);
         setLoading(false);
@@ -57,7 +62,7 @@ function Detail() {
     };
 
     xhr.send();
-  }, [getProxyUrl]);
+  }, [getProxyUrl, isMobile]);
 
   const showDetailList = [
     {
@@ -123,13 +128,13 @@ function Detail() {
   }, [getImageDetail])
 
   return (
-    <div className="container mx-auto p-5">
-      <div className='flex justify-center items-center min-w-[90rem] min-h-[50rem]'>
+    <div className="container mx-auto p-4 sm:p-5">
+      <div className='flex justify-center items-center w-full min-h-[20rem] sm:min-h-[30rem] lg:min-h-[50rem]'>
         {
           isLoading && proxyImageUrl ? (
             <img 
-              data-zoomable 
-              className='rounded-2xl cursor-pointer' 
+              {...(!isMobile && { 'data-zoomable': true })}
+              className='rounded-2xl max-w-full h-auto object-contain cursor-pointer' 
               src={proxyImageUrl}
               alt="" 
               onError={() => {
@@ -138,30 +143,30 @@ function Detail() {
               }}
             />
           ) : (
-            <span className="text-xl font-semibold">🤔加载中：{progress}%</span>
+            <span className="text-lg sm:text-xl font-semibold">🤔加载中：{progress}%</span>
           )
         }
       </div>
       
-      <div className='mt-5'>
-        <button onClick={handleDownload} className='cursor-pointer p-2  shadow-md border border-gray-300 rounded-lg'>
-          💾
+      <div className='mt-4 sm:mt-5'>
+        <button onClick={handleDownload} className='cursor-pointer font-bold p-2 sm:p-3 shadow-md border border-gray-300 rounded-lg text-lg sm:text-xl hover:bg-gray-50 transition-colors duration-200'>
+          💾 下载
         </button>
       </div>
-      <div className='mt-2'>
-        <h1 className='text-4xl font-semibold'>Tags</h1>
-        <ul className='flex gap-5 mt-3 flex-wrap'>
+      <div className='mt-4 sm:mt-6'>
+        <h1 className='text-2xl sm:text-3xl lg:text-4xl font-semibold'>Tags</h1>
+        <ul className='flex gap-2 sm:gap-3 lg:gap-5 mt-3 flex-wrap'>
           {
             imageDetail?.tags.map((tag, idx) => (
-              <li onClick={() => toSearchHandle(tag)} className='p-1.5 border-2 rounded-lg cursor-pointer hover:bg-gray-300 transition-colors duration-200 ' key={idx}>#{tag}</li>
+              <li onClick={() => toSearchHandle(tag)} className='p-1 sm:p-1.5 border-2 rounded-lg cursor-pointer hover:bg-gray-300 transition-colors duration-200 text-sm sm:text-base' key={idx}>#{tag}</li>
             ))
           }
         </ul>
       </div>
       {showDetailList.map((showDatail) => (
-        <div className='mt-6' key={showDatail.id}>
-          <h1 className='text-4xl font-semibold'>{showDatail.titile}</h1>
-          <span className='font-bold text-xl'>{showDatail.text}</span>
+        <div className='mt-4 sm:mt-6' key={showDatail.id}>
+          <h1 className='text-2xl sm:text-3xl lg:text-4xl font-semibold'>{showDatail.titile}</h1>
+          <span className='font-bold text-lg sm:text-xl'>{showDatail.text}</span>
         </div>
       ))
 

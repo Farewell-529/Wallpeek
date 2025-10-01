@@ -19,6 +19,8 @@ function Carousel({ images }: { images: Image[] }) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const carouselBoundsRef = useRef<DOMRect | null>(null);
 
+  const isMobile = window.innerWidth < 768;
+
   const extendedImages =
     images.length > 0 ? [images[images.length - 1], ...images, images[0]] : [];
 
@@ -31,6 +33,7 @@ function Carousel({ images }: { images: Image[] }) {
 
   // 3D鼠标移动处理
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (isMobile) return; // 移动端不处理鼠标移动
     if (!carouselBoundsRef.current) return;
 
     // 取消之前的动画帧
@@ -53,14 +56,19 @@ function Carousel({ images }: { images: Image[] }) {
 
       setMousePosition({ x: rotateY, y: rotateX });
     });
-  }, []);
+  }, [isMobile]);
 
   const handleMouseEnter = useCallback(() => {
+    if (isMobile) {
+      setShowArrow(true);
+      setIsHovered(true);
+      return;
+    }
     updateCarouselBounds();
     setShowInfo(false);
     setShowArrow(true);
     setIsHovered(true);
-  }, [updateCarouselBounds]);
+  }, [updateCarouselBounds, isMobile]);
 
   const handleMouseLeave = useCallback(() => {
     // 取消未完成的动画帧
@@ -74,8 +82,16 @@ function Carousel({ images }: { images: Image[] }) {
     setMousePosition({ x: 0, y: 0 });
   }, []);
 
-  // 3D变换样式计算
+  // 3D变换样式计算 - 移动端使用简单缩放
   const get3DTransformStyle = useCallback(() => {
+    if (isMobile) {
+      return {
+        transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+        transition: 'transform 0.2s ease-out',
+        willChange: 'transform'
+      };
+    }
+
     // 在切换过程中禁用3D效果避免冲突
     if (isTransitioning) {
       return {
@@ -100,7 +116,7 @@ function Carousel({ images }: { images: Image[] }) {
       transition: "transform 0.1s ease-out",
       willChange: "transform",
     };
-  }, [isHovered, mousePosition.x, mousePosition.y, isTransitioning]);
+  }, [isHovered, mousePosition.x, mousePosition.y, isTransitioning, isMobile]);
 
   // 清理动画帧
   useEffect(() => {
@@ -173,7 +189,7 @@ function Carousel({ images }: { images: Image[] }) {
   return (
     <div
       ref={carouselRef}
-      className="relative w-[80rem] h-[30rem] mx-auto mt-6 transform-gpu card-3d contain-layout-paint rounded-2xl"
+      className="relative w-full  h-[15rem] sm:h-[20rem] lg:h-[25rem] xl:h-[30rem] mx-auto mt-6 transform-gpu card-3d contain-layout-paint rounded-2xl"
       style={{
         // 动态阴影效果
         boxShadow: isHovered
@@ -202,7 +218,7 @@ function Carousel({ images }: { images: Image[] }) {
               <img
                 key={img.id + "-" + idx}
                 onClick={handleImageClick}
-                className="w-[80rem] h-[30rem] object-cover flex-shrink-0 cursor-pointer transform-gpu image-crisp"
+                className="w-full h-[15rem] sm:h-[20rem] lg:h-[25rem] xl:h-[30rem] object-cover flex-shrink-0 cursor-pointer transform-gpu image-crisp"
                 src={img.url}
                 alt=""
                 loading="eager"
@@ -213,7 +229,7 @@ function Carousel({ images }: { images: Image[] }) {
               />
             ))
           ) : (
-            <div className="w-[80rem] h-[25rem] bg-gray-200 flex items-center justify-center">
+            <div className="w-full h-[15rem] sm:h-[20rem] lg:h-[25rem] xl:h-[30rem] bg-gray-200 flex items-center justify-center">
               暂无图片
             </div>
           )}
@@ -227,8 +243,8 @@ function Carousel({ images }: { images: Image[] }) {
         }`}
       >
         <button
-          className="absolute left-10 top-1/2 transform -translate-y-1/2 cursor-pointer duration-200
-        text-xl bg-white/50 hover:bg-white/80 rounded-full px-3 py-1 z-10 font-mono font-bold"
+          className="absolute left-2 sm:left-4 lg:left-10 top-1/2 transform -translate-y-1/2 cursor-pointer duration-200
+        text-sm sm:text-lg xl:text-xl bg-white/50 hover:bg-white/80 rounded-full px-2 sm:px-3 py-0.5 sm:py-1 z-10 font-mono font-bold"
           onClick={handlePrev}
           disabled={isTransitioning}
           style={{
@@ -241,8 +257,8 @@ function Carousel({ images }: { images: Image[] }) {
           {"<"}
         </button>
         <button
-          className="absolute right-10 top-1/2 transform -translate-y-1/2  cursor-pointer duration-200
-        text-xl bg-white/50 hover:bg-white/80 rounded-full px-3 py-1 z-10 font-mono font-bold"
+          className="absolute right-2 sm:right-4 lg:right-10 top-1/2 transform -translate-y-1/2  cursor-pointer duration-200
+        text-sm sm:text-lg xl:text-xl bg-white/50 hover:bg-white/80 rounded-full px-2 sm:px-3 py-0.5 sm:py-1 z-10 font-mono font-bold"
           onClick={handleNext}
           disabled={isTransitioning}
           style={{
@@ -259,7 +275,7 @@ function Carousel({ images }: { images: Image[] }) {
       {/* 底部信息栏 */}
       {images.length > 0 && (
         <div
-          className={`absolute bottom-2 left-0 right-0 px-4 font-mono text-sm flex justify-between
+          className={`absolute bottom-2 left-0 right-0 px-2 sm:px-4 font-mono text-xs sm:text-sm flex justify-between
                       transition-opacity duration-500 ${
                         showInfo ? "opacity-100" : "opacity-0"
                       }`}

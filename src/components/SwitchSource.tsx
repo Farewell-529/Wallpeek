@@ -36,7 +36,7 @@ function SwitchSource({ switchSource }: SwitchSourceProps) {
             {
                 source.map((item) => (
                     <button
-                        className={`bg-gray-200 cursor-pointer rounded-md px-4 py-2
+                        className={`bg-gray-200 cursor-pointer rounded-md lg:px-4 lg:py-2 px-2 py-1   
                         ${currentSource === item.name ? 'bg-gray-300' : ''}`}
                         key={item.id}
                         onClick={() => clickHandle(item)}

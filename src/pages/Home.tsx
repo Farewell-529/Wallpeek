@@ -124,10 +124,10 @@ function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []); // 只在组件挂载时添加监听器
   return (
-    <div className="w-[80rem]  mx-auto">
+    <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8">
       <Carousel images={carouselImages} />
       <SwitchSource switchSource={getSource} />
-      <div className="mt-5 grid grid-cols-4 gap-8 ">
+      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
         {images.map((img) => (
           <div
             key={img.id}

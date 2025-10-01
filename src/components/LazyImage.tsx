@@ -18,6 +18,8 @@ function LazyImage(props: LazyImageProps) {
     const [isHovered, setIsHovered] = useState(false);
     const animationFrameRef = useRef<number | null>(null);
     const cardBoundsRef = useRef<DOMRect | null>(null);
+    
+    const isMobile = window.innerWidth < 768;
 
     useEffect(() => {
         const observer = new window.IntersectionObserver(
@@ -44,6 +46,7 @@ function LazyImage(props: LazyImageProps) {
 
     // 优化的鼠标移动处理，使用 requestAnimationFrame
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+        if (isMobile) return; // 移动端不处理鼠标移动
         if (!cardBoundsRef.current) return;
         
         // 取消之前的动画帧
@@ -66,13 +69,17 @@ function LazyImage(props: LazyImageProps) {
             
             setMousePosition({ x: rotateY, y: rotateX });
         });
-    }, []);
+    }, [isMobile]);
 
     const handleMouseEnter = useCallback(() => {
+        if (isMobile) {
+            setIsHovered(true); // 移动端只设置hover状态
+            return;
+        }
         updateCardBounds(); // 进入时更新边界信息
         setShowInfo(false);
         setIsHovered(true);
-    }, [updateCardBounds]);
+    }, [updateCardBounds, isMobile]);
 
     const handleMouseLeave = useCallback(() => {
         // 取消未完成的动画帧
@@ -85,8 +92,16 @@ function LazyImage(props: LazyImageProps) {
         setMousePosition({ x: 0, y: 0 }); // 重置旋转
     }, []);
 
-    // 优化的变换样式计算
+    // 优化的变换样式计算 - 移动端使用简单缩放
     const getTransformStyle = useCallback(() => {
+        if (isMobile) {
+            return {
+                transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+                transition: 'transform 0.2s ease-out',
+                willChange: 'transform'
+            };
+        }
+        
         if (!isHovered) {
             return {
                 transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) translate3d(0, 0, 0)',
@@ -100,7 +115,7 @@ function LazyImage(props: LazyImageProps) {
             transition: 'transform 0.1s ease-out',
             willChange: 'transform'
         };
-    }, [isHovered, mousePosition.x, mousePosition.y]);
+    }, [isHovered, mousePosition.x, mousePosition.y, isMobile]);
 
     // 图片加载完成处理
     const handleImageLoad = useCallback(() => {
@@ -125,11 +140,11 @@ function LazyImage(props: LazyImageProps) {
         <div 
             ref={cardRef}
             className="relative cursor-pointer shadow-xl rounded-2xl
-                border w-full h-[12.5rem] overflow-hidden transform-gpu card-3d"
+                border w-full h-[12.5rem] sm:h-[15rem] lg:h-[12.5rem] overflow-hidden transform-gpu card-3d"
             style={{ 
                 borderColor: show ? "transparent" : "#DCDCDC",
                 backfaceVisibility: 'hidden',
-                transformStyle: 'preserve-3d',
+                transformStyle: isMobile ? undefined : 'preserve-3d',
                 ...getTransformStyle()
             }}
             onMouseMove={handleMouseMove}
@@ -139,9 +154,9 @@ function LazyImage(props: LazyImageProps) {
             {/* 修改后的加载提示逻辑 */}
             {isLoading && (
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 
-                    text-gray-700 font-mono text-sm font-bold">
+                    text-gray-700 font-mono text-xs sm:text-sm font-bold">
                     <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                         <span>加载中...🤔</span>
                     </div>
                 </div>
@@ -162,11 +177,11 @@ function LazyImage(props: LazyImageProps) {
             </div>
             
             <div
-                className={`absolute bottom-2 px-2 font-mono text-sm flex justify-between 
+                className={`absolute bottom-2 px-2 font-mono text-xs sm:text-sm flex justify-between 
                     w-full transition-opacity duration-400 ${showInfo ? 'opacity-100' : 'opacity-0'
                     }`}
                 style={{
-                    transform: isHovered ? `translate3d(0, 0, 30px)` : 'translate3d(0, 0, 0)',
+                    transform: isHovered && !isMobile ? `translate3d(0, 0, 30px)` : 'translate3d(0, 0, 0)',
                     transition: 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                     willChange: isHovered ? 'transform' : 'auto'
                 }}

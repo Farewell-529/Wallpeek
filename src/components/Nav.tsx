@@ -40,23 +40,46 @@ function Nav() {
   }
 
   return (
-    <div className="flex justify-center mt-3">
-      <nav className="w-[75rem] font-bold text-2xl flex justify-between ">
-        <span className="cursor-pointer" onClick={toHomeClick}>
-          👻wallpaper👌🏻
-        </span>
-        <div className="flex gap-5">
-          <div className="flex gap-1">
-            <input type="text" placeholder="Search..."
-              onKeyDown={keyDownHandle}
-              onChange={enterValueHandle}
-              value={inputValue}
-              className="border border-gray-300 rounded-lg font-medium px-2 text-lg w-70 transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-gray-800" />
-            <span className="text-lg cursor-pointer" onClick={searchClick}>🔍</span>
-          </div>
-          <span className="cursor-pointer">
+    <div className="flex justify-center mt-3 px-4">
+      <nav className="w-full max-w-[20rem] sm:max-w-[40rem] lg:max-w-[60rem] xl:max-w-[75rem] font-bold text-lg sm:text-xl lg:text-2xl">
+        {/* 移动端：第一层 - 标题和收藏在两边 */}
+        <div className="flex justify-between items-center mb-3 sm:mb-0 sm:hidden">
+          <span className="cursor-pointer" onClick={toHomeClick}>
+            👻wallpaper👌🏻
+          </span>
+          <span className="cursor-pointer text-sm sm:text-base lg:text-lg sm:hidden">
             Favorites❤️
           </span>
+        </div>
+        
+        {/* 桌面端：整体布局 */}
+        <div className="hidden sm:flex justify-between items-center">
+          <span className="cursor-pointer" onClick={toHomeClick}>
+            👻wallpaper👌🏻
+          </span>
+          <div className="flex gap-5 items-center">
+            <div className="flex gap-1">
+              <input type="text" placeholder="Search..."
+                onKeyDown={keyDownHandle}
+                onChange={enterValueHandle}
+                value={inputValue}
+                className="border border-gray-300 rounded-lg font-medium px-2 text-base lg:text-lg w-48 lg:w-70 transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-gray-800" />
+              <span className="text-base lg:text-lg cursor-pointer" onClick={searchClick}>🔍</span>
+            </div>
+            <span className="cursor-pointer text-base lg:text-lg">
+              Favorites❤️
+            </span>
+          </div>
+        </div>
+
+        {/* 移动端：第二层 - 搜索框占满整行 */}
+        <div className="flex gap-1 w-full sm:hidden items-center">
+          <input type="text" placeholder="Search..."
+            onKeyDown={keyDownHandle}
+            onChange={enterValueHandle}
+            value={inputValue}
+            className="border border-gray-300 rounded-xl font-medium p-2 text-sm flex-1 transition-all duration-500 focus:outline-none focus:ring-2 focus:ring-gray-800" />
+          <span className="text-xl cursor-pointer" onClick={searchClick}>🔍</span>
         </div>
       </nav>
     </div>
