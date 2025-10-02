@@ -33,7 +33,7 @@ function LazyImage(props: LazyImageProps) {
             },
             { threshold: 0.3 } //可见时加载
         );
-        if (imgRef.current) observer.observe(imgRef.current);
+        if (cardRef.current) observer.observe(cardRef.current);
         return () => observer.disconnect();
     }, []);
 
@@ -163,17 +163,19 @@ function LazyImage(props: LazyImageProps) {
             )}
 
             <div className="w-full h-full flex justify-center">
-                <img
-                    className="w-full h-full rounded-2xl object-cover"
-                    ref={imgRef}
-                    src={show ? src : ""}
-                    onLoad={handleImageLoad}
-                    onError={handleImageError}
-                    style={{ 
-                        opacity: show && !isLoading ? 1 : 0, 
-                        transition: "opacity 0.3s ease-in-out"
-                    }}
-                />
+                {show &&  (
+                    <img
+                        className="w-full h-full rounded-2xl object-cover"
+                        ref={imgRef}
+                        src={src}
+                        onLoad={handleImageLoad}
+                        onError={handleImageError}
+                        style={{ 
+                            opacity: !isLoading ? 1 : 0, 
+                            transition: "opacity 0.3s ease-in-out"
+                        }}
+                    />
+                )}
             </div>
             
             <div
